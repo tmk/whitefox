@@ -1,5 +1,5 @@
 /*
-Copyright 2012 Jun Wako <wakojun@gmail.com>
+Copyright 2015 Jun Wako <wakojun@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,12 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 void led_set(uint8_t usb_led) {
-    // PTC1: LCD Backlight Red(0:on/1:off)
-    GPIOC->PDDR |= (1<<1);
-    PORTC->PCR[1] |= PORTx_PCRn_DSE | PORTx_PCRn_MUX(1);
+    // PTA5: LED (1:on/0:off)
+    GPIOA->PDDR |= (1<<1);
+    PORTA->PCR[5] |= PORTx_PCRn_DSE | PORTx_PCRn_MUX(1);
     if (usb_led & (1<<USB_LED_CAPS_LOCK)) {
-        GPIOC->PCOR |= (1<<1);
+        GPIOA->PSOR |= (1<<5);
     } else {
-        GPIOC->PSOR |= (1<<1);
+        GPIOA->PCOR |= (1<<5);
     }
 }

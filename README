@@ -1,10 +1,11 @@
-TMK/chibios for Input Club Infinity Ergodox
-===========================================
+TMK/chibios for matt3o's WhiteFox
+=================================
 2015/12/10 Jun Wako
 
-This is unofficial keyobard firmware for Infinity Ergodox. 
+This is unofficial keyobard firmware for matt3o's WhiteFox.
 
-    http://input.club/devices/infinity-ergodox
+    http://deskthority.net/workshop-f7/the-long-journey-of-the-whitefox-t12134.html  
+    https://www.massdrop.com/buy/the-whitefox-keyboard
 
 It is based on flabbergast's TMK/chibios See this.
 
@@ -13,8 +14,8 @@ It is based on flabbergast's TMK/chibios See this.
 
 Build
 -----
-$ git clone https://github.com/tmk/infinity_ergodox.git
-$ cd infinity_ergodox
+$ git clone https://github.com/tmk/whitefox.git
+$ cd whitefox
 $ git submodule update --init --recursive
 $ make
 
