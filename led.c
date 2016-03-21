@@ -19,8 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "led.h"
 
+#include "led_controller.h"
 
 void led_set(uint8_t usb_led) {
+/*
     // PTA5: LED (1:on/0:off)
     GPIOA->PDDR |= (1<<1);
     PORTA->PCR[5] |= PORTx_PCRn_DSE | PORTx_PCRn_MUX(1);
@@ -28,5 +30,11 @@ void led_set(uint8_t usb_led) {
         GPIOA->PSOR |= (1<<5);
     } else {
         GPIOA->PCOR |= (1<<5);
+    }
+ */
+    if (usb_led & (1<<USB_LED_CAPS_LOCK)) {
+        issi_write_register(0, 0x5B, 0xFF);
+    } else {
+        issi_write_register(0, 0x5B, 0);
     }
 }
