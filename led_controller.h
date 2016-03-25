@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 msg_t issi_write_data(uint8_t page, uint8_t *buffer, uint8_t size);
 msg_t issi_write_register(uint8_t page, uint8_t reg, uint8_t data);
-
+msg_t issi_read_register(uint8_t page, uint8_t reg, uint8_t *result);
 
 /* =============================
  * ISSI chip related definitions

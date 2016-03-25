@@ -92,12 +92,11 @@ msg_t issi_write_register(uint8_t page, uint8_t reg, uint8_t data) {
   return i2cMasterTransmitTimeout(&I2CD1, ISSI_ADDR_DEFAULT, tx, 2, rx, 1, US2ST(ISSI_TIMEOUT));
 }
 
-// read value in rx[0]
-msg_t issi_read_register(uint8_t b, uint8_t reg) {
+msg_t issi_read_register(uint8_t b, uint8_t reg, uint8_t *result) {
   issi_select_page(b);
 
   tx[0] = reg;
-  return i2cMasterTransmitTimeout(&I2CD1, ISSI_ADDR_DEFAULT, tx, 1, rx, 1, US2ST(ISSI_TIMEOUT));
+  return i2cMasterTransmitTimeout(&I2CD1, ISSI_ADDR_DEFAULT, tx, 1, result, 1, US2ST(ISSI_TIMEOUT));
 }
 
 /* ========================

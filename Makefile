@@ -68,9 +68,14 @@ MCU  = cortex-m4
 # I.e. 6 for Teensy LC; 7 for Teensy 3.x
 ARMV = 7
 
-# Vector table for application
-# 0x00000000-0x00001000 area is occupied by bootlaoder.*/
-# The CORTEX_VTOR... is needed only for MCHCK/Infinity KB
+# Vector table placement
+# 0x00000000-0x00002000 area is occupied by bootloader on WF.
+# CORTEX_VTOR_INIT definition moves the vector table after the bootloader
+# ---
+# Consider adding -O0 to OPT_DEFS if things seem to fail strangely
+# (Sometimes the default -O2 optimisation is too aggressive.
+#  The -O0 makes the firmware a lot bigger (about 30%), but WF has
+#  a lot of flash space anyway.)
 OPT_DEFS = -DCORTEX_VTOR_INIT=0x00002000
 
 # Build Options
