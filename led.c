@@ -33,8 +33,8 @@ void led_set(uint8_t usb_led) {
     }
  */
     if (usb_led & (1<<USB_LED_CAPS_LOCK)) {
-        issi_write_register(0, 0x5B, 0xFF);
+        is31_write_register(0, 0x5B, 0xFF);
     } else {
-        issi_write_register(0, 0x5B, 0);
+        is31_write_register(0, 0x5B, 0);
     }
 }

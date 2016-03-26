@@ -123,12 +123,12 @@ void action_function(keyrecord_t *record, uint8_t id, uint8_t opt) {
     case ACTION_LEDS_ENTER:
       /* toggle enter LED on press */
       if(record->event.pressed) {
-        issi_read_register(0, 0x78, &status);
+        is31_read_register(0, 0x78, &status);
         chThdSleepMilliseconds(1);
         if(status) {
-          issi_write_register(0, 0x78, 0);
+          is31_write_register(0, 0x78, 0);
         } else {
-          issi_write_register(0, 0x78, 0xFF);
+          is31_write_register(0, 0x78, 0xFF);
         }
       }
       break;
@@ -136,16 +136,16 @@ void action_function(keyrecord_t *record, uint8_t id, uint8_t opt) {
       /* toggle TMK LOGO LEDs on press */
       if(record->event.pressed) {
         uint8_t i;
-        issi_read_register(0, 0x25, &status);
+        is31_read_register(0, 0x25, &status);
         chThdSleepMilliseconds(5);
         if(status) {
           for(i=0; i<9; i++) {
-            issi_write_data(0,(uint8_t *)(blank_leds+(9*i)),9);
+            is31_write_data(0,(uint8_t *)(blank_leds+(9*i)),9);
             chThdSleepMilliseconds(5);
           }
         } else {
           for(i=0; i<9; i++) {
-            issi_write_data(0,(uint8_t *)(tmk_logo+(9*i)),9);
+            is31_write_data(0,(uint8_t *)(tmk_logo+(9*i)),9);
             chThdSleepMilliseconds(5);
           }
         }

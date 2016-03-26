@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h> // memcpy
 
 /* WF LED MAP
-    - digits mean "row" and "col", i.e. 45 means C4-5 in the ISSI datasheet, matrix A
+    - digits mean "row" and "col", i.e. 45 means C4-5 in the IS31 datasheet, matrix A
 
   11 12 13 14 15 16 17 18 21 22 23 24 25 26 27  28
    31 32 33 34 35 36 37 38 41 42 43 44 45  46   47
@@ -52,7 +52,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * ChibiOS I2C setup
  * ================= */
 static const I2CConfig i2ccfg = {
-  400000 // clock speed (Hz); 400kHz max for ISSI
+  400000 // clock speed (Hz); 400kHz max for IS31
 };
 
 /* ==============
@@ -66,7 +66,7 @@ uint8_t rx[1] __attribute__((aligned(4)));
 uint8_t full_page[0xB4+1] = {0};
 
 // LED mask (which LEDs are present, selected by bits)
-const uint8_t issi_leds_mask[0x12] = {
+const uint8_t is31_leds_mask[0x12] = {
   0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF,
   0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x7F, 0x00
 };
@@ -74,54 +74,54 @@ const uint8_t issi_leds_mask[0x12] = {
 /* ============================
  *   communication functions
  * ============================ */
-msg_t issi_select_page(uint8_t page) {
-  tx[0] = ISSI_COMMANDREGISTER;
+msg_t is31_select_page(uint8_t page) {
+  tx[0] = IS31_COMMANDREGISTER;
   tx[1] = page;
-  return i2cMasterTransmitTimeout(&I2CD1, ISSI_ADDR_DEFAULT, tx, 2, rx, 1, US2ST(ISSI_TIMEOUT));
+  return i2cMasterTransmitTimeout(&I2CD1, IS31_ADDR_DEFAULT, tx, 2, rx, 1, US2ST(IS31_TIMEOUT));
 }
 
-msg_t issi_write_data(uint8_t page, uint8_t *buffer, uint8_t size) {
-  issi_select_page(page);
-  return i2cMasterTransmitTimeout(&I2CD1, ISSI_ADDR_DEFAULT, buffer, size, rx, 1, US2ST(ISSI_TIMEOUT));
+msg_t is31_write_data(uint8_t page, uint8_t *buffer, uint8_t size) {
+  is31_select_page(page);
+  return i2cMasterTransmitTimeout(&I2CD1, IS31_ADDR_DEFAULT, buffer, size, rx, 1, US2ST(IS31_TIMEOUT));
 }
 
-msg_t issi_write_register(uint8_t page, uint8_t reg, uint8_t data) {
-  issi_select_page(page);
+msg_t is31_write_register(uint8_t page, uint8_t reg, uint8_t data) {
+  is31_select_page(page);
   tx[0] = reg;
   tx[1] = data;
-  return i2cMasterTransmitTimeout(&I2CD1, ISSI_ADDR_DEFAULT, tx, 2, rx, 1, US2ST(ISSI_TIMEOUT));
+  return i2cMasterTransmitTimeout(&I2CD1, IS31_ADDR_DEFAULT, tx, 2, rx, 1, US2ST(IS31_TIMEOUT));
 }
 
-msg_t issi_read_register(uint8_t b, uint8_t reg, uint8_t *result) {
-  issi_select_page(b);
+msg_t is31_read_register(uint8_t b, uint8_t reg, uint8_t *result) {
+  is31_select_page(b);
 
   tx[0] = reg;
-  return i2cMasterTransmitTimeout(&I2CD1, ISSI_ADDR_DEFAULT, tx, 1, result, 1, US2ST(ISSI_TIMEOUT));
+  return i2cMasterTransmitTimeout(&I2CD1, IS31_ADDR_DEFAULT, tx, 1, result, 1, US2ST(IS31_TIMEOUT));
 }
 
 /* ========================
- * initialise the ISSI chip
+ * initialise the IS31 chip
  * ======================== */
-void issi_init(void) {
+void is31_init(void) {
   // zero function page, all registers (assuming full_page is all zeroes)
-  issi_write_data(ISSI_FUNCTIONREG, full_page, 0xD + 1);
+  is31_write_data(IS31_FUNCTIONREG, full_page, 0xD + 1);
   // disable hardware shutdown
   palSetPadMode(GPIOB, 16, PAL_MODE_OUTPUT_PUSHPULL);
   palSetPad(GPIOB, 16);
   chThdSleepMilliseconds(10);
   // software shutdown
-  issi_write_register(ISSI_FUNCTIONREG, ISSI_REG_SHUTDOWN, 0);
+  is31_write_register(IS31_FUNCTIONREG, IS31_REG_SHUTDOWN, 0);
   chThdSleepMilliseconds(10);
   // zero function page, all registers
-  issi_write_data(ISSI_FUNCTIONREG, full_page, 0xD + 1);
+  is31_write_data(IS31_FUNCTIONREG, full_page, 0xD + 1);
   chThdSleepMilliseconds(10);
   // software shutdown disable (i.e. turn stuff on)
-  issi_write_register(ISSI_FUNCTIONREG, ISSI_REG_SHUTDOWN, ISSI_REG_SHUTDOWN_ON);
+  is31_write_register(IS31_FUNCTIONREG, IS31_REG_SHUTDOWN, IS31_REG_SHUTDOWN_ON);
   chThdSleepMilliseconds(10);
   // zero all LED registers on all 8 pages
   uint8_t i;
   for(i=0; i<8; i++) {
-    issi_write_data(i, full_page, 0xB4 + 1);
+    is31_write_data(i, full_page, 0xB4 + 1);
     chThdSleepMilliseconds(1);
   }
 }
@@ -146,10 +146,10 @@ void issi_init(void) {
 //     // process 'msg' here
 //     switch(msg) {
 //       case LED_CTR_CAPS_ON:
-//         issi_write_register(0, 0x5B, 0xFF); // full brightness
+//         is31_write_register(0, 0x5B, 0xFF); // full brightness
 //         break;
 //       case LED_CTR_CAPS_OFF:
-//         issi_write_register(0, 0x5B, 0x00);
+//         is31_write_register(0, 0x5B, 0x00);
 //         break;
 //     }
 //   }
@@ -172,13 +172,13 @@ void early_init_hook(void) {
 
   chThdSleepMilliseconds(10);
 
-  /* initialise ISSI chip */
-  issi_init();
+  /* initialise IS31 chip */
+  is31_init();
 
   /* enable WF LEDs on page 0 */
   full_page[0] = 0;
-  memcpy(full_page+1, issi_leds_mask, 0x12);
-  issi_write_data(0, full_page, 1+0x12);
+  memcpy(full_page+1, is31_leds_mask, 0x12);
+  is31_write_data(0, full_page, 1+0x12);
 
   /* more time consuming LED processing should be offloaded into
    * a thread, with asynchronous messaging. */
