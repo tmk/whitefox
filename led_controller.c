@@ -26,7 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "led_controller.h"
 
-#include <string.h> // memcpy
+#include "hooks.h"
+#include "suspend.h"
+
+#include "usb_main.h"
 
 /* WF LED MAP
     - digits mean "row" and "col", i.e. 45 means C4-5 in the IS31 datasheet, matrix A
@@ -48,6 +51,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     order same as above (CA 1st row (8bytes), CB 1st row (8bytes), ...)
 */
 
+/* Which LED should be used for CAPS LOCK indicator
+ * The usual Caps Lock position is C4-8, so the address is
+ * 0x24 + (4-1)*0x10 + (8-1) = 0x5B */
+#if !defined(CAPS_LOCK_LED_ADDRESS)
+#define CAPS_LOCK_LED_ADDRESS 0x5B
+#endif
+
+/* Which LED should breathe during sleep */
+#if !defined(BREATHE_LED_ADDRESS)
+#define BREATHE_LED_ADDRESS CAPS_LOCK_LED_ADDRESS
+#endif
+
 /* =================
  * ChibiOS I2C setup
  * ================= */
@@ -58,15 +73,15 @@ static const I2CConfig i2ccfg = {
 /* ==============
  *   variables
  * ============== */
-// basic communication buffers
-uint8_t tx[2] __attribute__((aligned(4)));
-uint8_t rx[1] __attribute__((aligned(4)));
+// internal communication buffers
+uint8_t tx[2] __attribute__((aligned(2)));
+uint8_t rx[1] __attribute__((aligned(2)));
 
-// buffer for sending the whole page at once
+// buffer for sending the whole page at once (used also as a temp buffer)
 uint8_t full_page[0xB4+1] = {0};
 
 // LED mask (which LEDs are present, selected by bits)
-const uint8_t is31_leds_mask[0x12] = {
+const uint8_t is31_wf_leds_mask[0x12] = {
   0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF,
   0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x7F, 0x00
 };
@@ -129,36 +144,121 @@ void is31_init(void) {
 /* ==================
  * LED control thread
  * ================== */
-// thread_reference_t trp = NULL; // thread reference (for waiting for events)
-// static THD_WORKING_AREA(waLEDthread, 32);
-// static THD_FUNCTION(LEDthread, arg) {
-//   (void)arg;
-//   chRegSetThreadName("LEDthread");
+#define LED_MAILBOX_NUM_MSGS 5
+static msg_t led_mailbox_queue[LED_MAILBOX_NUM_MSGS];
+mailbox_t led_mailbox;
+static THD_WORKING_AREA(waLEDthread, 256);
+static THD_FUNCTION(LEDthread, arg) {
+  (void)arg;
+  chRegSetThreadName("LEDthread");
 
-//   msg_t msg;
+  uint8_t temp;
+  uint8_t save_page, save_breath1, save_breath2;
+  msg_t msg, retval;
 
-//   while(true) {
-//     // wait for a message (synchronous)
-//     chSysLock();
-//     msg = chThdSuspend(&trp);
-//     chSysUnlock();
+  while(true) {
+    // wait for a message (asynchronous)
+    // (messages are queued (up to LED_MAILBOX_NUM_MSGS) if they can't
+    //  be processed right away)
+    chMBFetch(&led_mailbox, &msg, TIME_INFINITE);
 
-//     // process 'msg' here
-//     switch(msg) {
-//       case LED_CTR_CAPS_ON:
-//         is31_write_register(0, 0x5B, 0xFF); // full brightness
-//         break;
-//       case LED_CTR_CAPS_OFF:
-//         is31_write_register(0, 0x5B, 0x00);
-//         break;
-//     }
-//   }
-// }
+    // process 'msg' here
+    switch(msg) {
+      case LED_MSG_CAPS_ON:
+        // turn caps on on pages 1 and 2
+        is31_write_register(0, CAPS_LOCK_LED_ADDRESS, 0xFF);
+        is31_write_register(1, CAPS_LOCK_LED_ADDRESS, 0xFF);
+        break;
+      case LED_MSG_CAPS_OFF:
+        // turn caps off on pages 1 and 2
+        is31_write_register(0, CAPS_LOCK_LED_ADDRESS, 0);
+        is31_write_register(1, CAPS_LOCK_LED_ADDRESS, 0);
+        break;
+      case LED_MSG_SLEEP_LED_ON:
+        // save current settings
+        is31_read_register(IS31_FUNCTIONREG, IS31_REG_PICTDISP, &save_page);
+        is31_read_register(IS31_FUNCTIONREG, IS31_REG_BREATHCTRL1, &save_breath1);
+        is31_read_register(IS31_FUNCTIONREG, IS31_REG_BREATHCTRL2, &save_breath2);
+        // use pages 7 and 8 for (hardware) breathing (assuming they're empty)
+        is31_write_register(6, BREATHE_LED_ADDRESS, 0xFF);
+        is31_write_register(7, BREATHE_LED_ADDRESS, 0x00);
+        is31_write_register(IS31_FUNCTIONREG, IS31_REG_BREATHCTRL1, (6<<4)|6);
+        is31_write_register(IS31_FUNCTIONREG, IS31_REG_BREATHCTRL2, IS31_REG_BREATHCTRL2_ENABLE|3);
+        retval = MSG_TIMEOUT;
+        temp = 6;
+        while(retval == MSG_TIMEOUT) {
+          // switch to the other page
+          is31_write_register(IS31_FUNCTIONREG, IS31_REG_PICTDISP, temp);
+          temp = (temp == 6 ? 7 : 6);
+          // the times should be sufficiently long for IS31 to finish switching pages
+          retval = chMBFetch(&led_mailbox, &msg, MS2ST(temp == 6 ? 4000 : 6000));
+        }
+        // received a message (should be a wakeup), so restore previous state
+        chThdSleepMilliseconds(3000); // need to wait until the page change finishes
+        // note: any other messages are queued
+        is31_write_register(IS31_FUNCTIONREG, IS31_REG_BREATHCTRL1, save_breath1);
+        is31_write_register(IS31_FUNCTIONREG, IS31_REG_BREATHCTRL2, save_breath2);
+        is31_write_register(IS31_FUNCTIONREG, IS31_REG_PICTDISP, save_page);
+        break;
+      case LED_MSG_SLEEP_LED_OFF:
+        // should not get here; wakeup should be received in the branch above
+        break;
+      case LED_MSG_LOGO_TOGGLE:
+        // read current page into 'temp'
+        is31_read_register(IS31_FUNCTIONREG, IS31_REG_PICTDISP, &temp);
+        chThdSleepMilliseconds(1);
+        // switch to 'the other' page
+        if(temp) {
+          is31_write_register(IS31_FUNCTIONREG, IS31_REG_PICTDISP, 0);
+        } else {
+          is31_write_register(IS31_FUNCTIONREG, IS31_REG_PICTDISP, 1);
+        }
+        break;
+      case LED_MSG_ENTER_TOGGLE:
+        is31_read_register(0, 0x78, &temp);
+        chThdSleepMilliseconds(1);
+        if(temp) {
+          // turn off on pages 1 and 2
+          is31_write_register(0, 0x78, 0);
+          is31_write_register(1, 0x78, 0);
+        } else {
+          // turn on on pages 1 and 2
+          is31_write_register(0, 0x78, 0xFF);
+          is31_write_register(1, 0x78, 0xFF);
+        }
+        break;
+    }
+  }
+}
+
+/* Demo: display "tmk" name using switch LEDs */
+const uint8_t tmk_logo[83] = {
+  0x24,
+  0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF,
+  0x34,
+  0xFF, 0x00, 0xFF, 0x00, 0x00, 0xFF, 0x00, 0x00,
+  0x44,
+  0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00,
+  0x54,
+  0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00,
+  0x64,
+  0xFF, 0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF,
+  0x74,
+  0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0xFF,
+  0x84,
+  0xFF, 0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF,
+  0x94,
+  0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF,
+  0xA4,
+  0x00, 0x00, 0xFF, 0x00, 0x00, 0xFF, 0x00, 0x00,
+};
 
 /* =============
  * hook into TMK
  * ============= */
 void early_init_hook(void) {
+  uint8_t i;
+
   /* initialise I2C */
   /* I2C pins */
   palSetPadMode(GPIOB, 0, PAL_MODE_ALTERNATIVE_2); // PTB0/I2C0/SCL
@@ -175,12 +275,50 @@ void early_init_hook(void) {
   /* initialise IS31 chip */
   is31_init();
 
-  /* enable WF LEDs on page 0 */
+  /* enable WF LEDs on all pages */
   full_page[0] = 0;
-  memcpy(full_page+1, is31_leds_mask, 0x12);
-  is31_write_data(0, full_page, 1+0x12);
+  __builtin_memcpy(full_page+1, is31_wf_leds_mask, 0x12);
+  for(i=0; i<8; i++) {
+    is31_write_data(i, full_page, 1+0x12);
+  }
+
+  /* enable breathing when the displayed page changes */
+  // Fade-in Fade-out, time = 26ms * 2^N, N=3
+  is31_write_register(IS31_FUNCTIONREG, IS31_REG_BREATHCTRL1, (3<<4)|3);
+  is31_write_register(IS31_FUNCTIONREG, IS31_REG_BREATHCTRL2, IS31_REG_BREATHCTRL2_ENABLE|3);
+
+  /* Write "TMK logo" into page 2 */
+  for(i=0; i<9; i++) {
+    is31_write_data(1,(uint8_t *)(tmk_logo+(9*i)),9);
+    chThdSleepMilliseconds(5);
+  }
 
   /* more time consuming LED processing should be offloaded into
    * a thread, with asynchronous messaging. */
-  // chThdCreateStatic(waLEDthread, sizeof(waLEDthread), LOWPRIO, LEDthread, NULL);
+  chMBObjectInit(&led_mailbox, led_mailbox_queue, LED_MAILBOX_NUM_MSGS);
+  chThdCreateStatic(waLEDthread, sizeof(waLEDthread), LOWPRIO, LEDthread, NULL);
+}
+
+void suspend_entry_hook(void) {
+#ifdef SLEEP_LED_ENABLE
+  chSysLockFromISR();
+  chMBPostI(&led_mailbox, LED_MSG_SLEEP_LED_ON);
+  chSysUnlockFromISR();
+#endif /* SLEEP_LED_ENABLE */
+}
+
+void suspend_loop_hook(void) {
+  chThdSleepMilliseconds(100);
+  /* Remote wakeup */
+  if((USB_DRIVER.status & 2) && suspend_wakeup_condition()) {
+    send_remote_wakeup(&USB_DRIVER);
+  }
+}
+
+void wakeup_hook(void) {
+#ifdef SLEEP_LED_ENABLE
+  chSysLockFromISR();
+  chMBPostI(&led_mailbox, LED_MSG_SLEEP_LED_OFF);
+  chSysUnlockFromISR();
+#endif /* SLEEP_LED_ENABLE */
 }

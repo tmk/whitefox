@@ -76,9 +76,18 @@ msg_t is31_read_register(uint8_t page, uint8_t reg, uint8_t *result);
 
 #define IS31_TIMEOUT 5000
 
-// extern thread_reference_t trp;
+/* ==============================
+ * LED Thread related definitions
+ * ============================== */
 
-// #define LED_CTR_CAPS_ON  1
-// #define LED_CTR_CAPS_OFF 2
+extern mailbox_t led_mailbox;
+
+// constants for signaling the LED controller thread
+#define LED_MSG_CAPS_ON  1
+#define LED_MSG_CAPS_OFF 2
+#define LED_MSG_SLEEP_LED_ON 3
+#define LED_MSG_SLEEP_LED_OFF 4
+#define LED_MSG_LOGO_TOGGLE 5
+#define LED_MSG_ENTER_TOGGLE 6
 
 #endif /* _LED_CONTROLLER_H_ */

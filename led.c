@@ -21,6 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "led_controller.h"
 
+/* WARNING! This function needs to be callable from
+ * both regular threads and ISRs, unlocked (during resume-from-sleep).
+ * In particular, I2C functions (interrupt-driven) should NOT be called from here.
+ */
 void led_set(uint8_t usb_led) {
 /*
     // PTA5: LED (1:on/0:off)
@@ -33,8 +37,14 @@ void led_set(uint8_t usb_led) {
     }
  */
     if (usb_led & (1<<USB_LED_CAPS_LOCK)) {
-        is31_write_register(0, 0x5B, 0xFF);
+        // signal the LED control thread
+        chSysUnconditionalLock();
+        chMBPostI(&led_mailbox, LED_MSG_CAPS_ON);
+        chSysUnconditionalUnlock();
     } else {
-        is31_write_register(0, 0x5B, 0);
+        // signal the LED control thread
+        chSysUnconditionalLock();
+        chMBPostI(&led_mailbox, LED_MSG_CAPS_OFF);
+        chSysUnconditionalUnlock();
     }
 }
