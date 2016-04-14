@@ -7,6 +7,8 @@ TMK_DIR = ./tmk_core
 # Directory keyboard dependent files exist
 TARGET_DIR = .
 
+CHIBIOS_CONTRIB = $(TMK_DIR)/tool/chibios/chibios-contrib
+
 # project specific files
 SRC =	matrix.c \
 	keymap_common.c \
