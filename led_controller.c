@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "led_controller.h"
 
-#include "hooks.h"
+#include "hook.h"
 #include "suspend.h"
 
 #include "usb_main.h"
@@ -256,7 +256,7 @@ const uint8_t tmk_logo[83] = {
 /* =============
  * hook into TMK
  * ============= */
-void early_init_hook(void) {
+void hook_early_init(void) {
   uint8_t i;
 
   /* initialise I2C */
@@ -299,7 +299,7 @@ void early_init_hook(void) {
   chThdCreateStatic(waLEDthread, sizeof(waLEDthread), LOWPRIO, LEDthread, NULL);
 }
 
-void suspend_entry_hook(void) {
+void hook_usb_suspend_entry(void) {
 #ifdef SLEEP_LED_ENABLE
   chSysLockFromISR();
   chMBPostI(&led_mailbox, LED_MSG_SLEEP_LED_ON);
@@ -307,7 +307,7 @@ void suspend_entry_hook(void) {
 #endif /* SLEEP_LED_ENABLE */
 }
 
-void suspend_loop_hook(void) {
+void hook_usb_suspend_loop(void) {
   chThdSleepMilliseconds(100);
   /* Remote wakeup */
   if((USB_DRIVER.status & 2) && suspend_wakeup_condition()) {
@@ -315,7 +315,7 @@ void suspend_loop_hook(void) {
   }
 }
 
-void wakeup_hook(void) {
+void hook_usb_wakeup(void) {
 #ifdef SLEEP_LED_ENABLE
   chSysLockFromISR();
   chMBPostI(&led_mailbox, LED_MSG_SLEEP_LED_OFF);
