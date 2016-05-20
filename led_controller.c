@@ -118,6 +118,8 @@ msg_t is31_read_register(uint8_t b, uint8_t reg, uint8_t *result) {
  * initialise the IS31 chip
  * ======================== */
 void is31_init(void) {
+  // just to be sure that it's all zeroes
+  __builtin_memset(full_page,0,0xB4+1);
   // zero function page, all registers (assuming full_page is all zeroes)
   is31_write_data(IS31_FUNCTIONREG, full_page, 0xD + 1);
   // disable hardware shutdown

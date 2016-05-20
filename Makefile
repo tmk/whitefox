@@ -74,12 +74,15 @@ ARMV = 7
 # Vector table placement
 # 0x00000000-0x00002000 area is occupied by bootloader on WF.
 # CORTEX_VTOR_INIT definition moves the vector table after the bootloader
+# -> This is no longer needed for newer ChibiOS releases (set automatically by
+#    the .ld script).
 # ---
 # Consider adding -O0 to OPT_DEFS if things seem to fail strangely
 # (Sometimes the default -O2 optimisation is too aggressive.
 #  The -O0 makes the firmware a lot bigger (about 30%), but WF has
 #  a lot of flash space anyway.)
-OPT_DEFS = -DCORTEX_VTOR_INIT=0x00002000
+#OPT_DEFS = -DCORTEX_VTOR_INIT=0x00002000
+OPT_DEFS =
 
 # Build Options
 #   comment out to disable the options.

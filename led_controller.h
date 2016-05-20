@@ -74,7 +74,7 @@ msg_t is31_read_register(uint8_t page, uint8_t reg, uint8_t *result);
 #define IS31_COMMANDREGISTER 0xFD
 #define IS31_FUNCTIONREG 0x0B    // helpfully called 'page nine'
 
-#define IS31_TIMEOUT 5000
+#define IS31_TIMEOUT 10000 // needs to be long enough to write a whole page
 
 /* ==============================
  * LED Thread related definitions
