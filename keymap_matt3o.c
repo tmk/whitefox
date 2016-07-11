@@ -25,38 +25,32 @@ const uint8_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      * |---------------------------------------------------------------|
      * |Tab  |  Q|  W|  E|  R|  T|  Y|  U|  I|  O|  P|  [|  ]|Backs|Del|
      * |---------------------------------------------------------------|
-     * | Ctrl |  A|  S|  D|  F|  G|  H|  J|  K|  L|  ;|  '|Enter   |PgU|
+     * |CapsLo|  A|  S|  D|  F|  G|  H|  J|  K|  L|  ;|  '|Enter   |PgU|
      * |---------------------------------------------------------------|
      * |Shif|   |  Z|  X|  C|  V|  B|  N|  M|  ,|  .|  /|Shift |Up |PgD|
      * |---------------------------------------------------------------|
-     * |FN0 |Alt |Gui |         Space         |Gui |Alt |  |Lef|Dow|Rig|
+     * |Ctrl|Gui |Alt |         Space    |Fn0 |Alt |Gui |  |Lef|Dow|Rig|
      * `---------------------------------------------------------------'
      */
     [0] = KEYMAP( \
-        ESC, 1,   2,   3,   4,   5,   6,   7,   8,   9,   0,   MINS,EQL, BSLS,GRV, INS, \
+        ESC, 1,   2,   3,   4,   5,   6,   7,   8,   9,   0,   MINS,EQL, BSLS,GRV, MUTE,\
         TAB, Q,   W,   E,   R,   T,   Y,   U,   I,   O,   P,   LBRC,RBRC,BSPC,     DEL, \
-        LCTL,A,   S,   D,   F,   G,   H,   J,   K,   L,   SCLN,QUOT,NUHS,ENT,      PGUP,\
+        FN0, A,   S,   D,   F,   G,   H,   J,   K,   L,   SCLN,QUOT,NUHS,ENT,      PGUP,\
         LSFT,NUBS,Z,   X,   C,   V,   B,   N,   M,   COMM,DOT, SLSH,RSFT,     UP,  PGDN,\
-        FN0, LALT,LGUI,               SPC,           RGUI,RALT,NO,       LEFT,DOWN,RGHT \
+        LCTL,LGUI,LALT,               SPC,           RALT,FN1, RCTL,     LEFT,DOWN,RGHT \
     ),
-    /* Layer 1: HHKB-style FN-layer plus extras
-     * ,---------------------------------------------------------------.
-     * | ` | F1| F2| F3| F4| F5| F6| F7| F8| F9|F10|F11|F12|Ins|Del|Btl|
-     * |---------------------------------------------------------------|
-     * |Caps |   |Wak|Slp|   |   |   |   |PSc|SLk|Pau| Up|   |     |FN1|
-     * |---------------------------------------------------------------|
-     * |      |Vo-|Vo+|VoM|Ejc|   | * | / |Hom|PgU|Lef|Rgt| Enter  |FN2|
-     * |---------------------------------------------------------------|
-     * |    |   |FN5|FN6|   |   |   | + | - |End|PgD|Dow|      |   |FN3|
-     * |---------------------------------------------------------------|
-     * |    |    |    |                  |    |    |    |  |   |   |   |
-     * `---------------------------------------------------------------'
-     */
     [1] = KEYMAP( \
-        GRV, F1,  F2,  F3,  F4,  F5,  F6,  F7,  F8,  F9,  F10, F11, F12, INS, DEL, BTLD,\
-        CAPS,TRNS,WAKE,SLEP,TRNS,TRNS,TRNS,TRNS,PSCR,SLCK,PAUS,UP,  TRNS,TRNS,     FN1, \
-        TRNS,VOLD,VOLU,MUTE,EJCT,TRNS,PAST,PSLS,HOME,PGUP,LEFT,RGHT,TRNS,PENT,     FN2, \
-        TRNS,TRNS,FN5 ,FN6 ,TRNS,TRNS,TRNS,PPLS,PMNS,END, PGDN,DOWN,TRNS,     TRNS,FN3, \
+        TRNS,F1,  F2,  F3,  F4,  F5,  F6,  F7,  F8,  F9,  F10, F11, F12, TRNS,TRNS,TRNS,\
+        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,DEL ,     INS ,\
+        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,     VOLU,\
+        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,     PGUP,VOLD,\
+        TRNS,TRNS,TRNS,               TRNS,          TRNS,TRNS,TRNS,     HOME,PGDN,END  \
+    ),
+    [2] = KEYMAP( \
+        TRNS,P1,  P2,  P3,  P4,  P5,  P6,  P7,  P8,  P9,  P0,  TRNS,TRNS,TRNS,TRNS,FN2, \
+        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,PSCR,TRNS,TRNS,TRNS,     FN3, \
+        CAPS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,     TRNS,\
+        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,     TRNS,TRNS,\
         TRNS,TRNS,TRNS,               TRNS,          TRNS,TRNS,TRNS,     TRNS,TRNS,TRNS \
     ),
 };
@@ -67,9 +61,9 @@ const uint8_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 const uint16_t fn_actions[] = {
     [0] = ACTION_LAYER_MOMENTARY(1),
-    // The following two will call action_function with parameter
-    [1] = ACTION_FUNCTION(ACTION_LEDS_ALL),
-    [2] = ACTION_FUNCTION(ACTION_LEDS_GAME),
+    [1] = ACTION_LAYER_MOMENTARY(2),
+    [2] = ACTION_FUNCTION(ACTION_LEDS_ALL),
+    [3] = ACTION_FUNCTION(ACTION_LEDS_GAME),
 };
 
 /* custom action function */

@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define _LED_CONTROLLER_H_
 
 /* =========================
- *  communication functions 
+ *  communication functions
  * ========================= */
 
 msg_t is31_write_data(uint8_t page, uint8_t *buffer, uint8_t size);
@@ -87,7 +87,7 @@ extern mailbox_t led_mailbox;
 #define LED_MSG_CAPS_OFF 2
 #define LED_MSG_SLEEP_LED_ON 3
 #define LED_MSG_SLEEP_LED_OFF 4
-#define LED_MSG_LOGO_TOGGLE 5
-#define LED_MSG_ENTER_TOGGLE 6
+#define LED_MSG_ALL_TOGGLE 5
+#define LED_MSG_GAME_TOGGLE 6
 
 #endif /* _LED_CONTROLLER_H_ */
