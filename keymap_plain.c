@@ -35,9 +35,17 @@ const uint8_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         TAB, Q,   W,   E,   R,   T,   Y,   U,   I,   O,   P,   LBRC,RBRC,BSPC,     DEL, \
         CAPS,A,   S,   D,   F,   G,   H,   J,   K,   L,   SCLN,QUOT,NUHS,ENT,      PGUP,\
         LSFT,NUBS,Z,   X,   C,   V,   B,   N,   M,   COMM,DOT, SLSH,RSFT,     UP,  PGDN,\
-        LCTL,LGUI,LALT,               SPC,           RALT,RGUI,RCTL,     LEFT,DOWN,RGHT \
+        LCTL,LGUI,LALT,               SPC,           RALT,FN0, RCTL,     LEFT,DOWN,RGHT \
+    ),
+    [1] = KEYMAP( \
+        TRNS,F1,  F2,  F3,  F4,  F5,  F6,  F7,  F8,  F9,  F10, F11, F12, TRNS,TRNS,MUTE,\
+        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,PSCR,SLCK,PAUS,TRNS,     TRNS,\
+        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,     VOLU,\
+        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,     PGUP,VOLD,\
+        TRNS,TRNS,TRNS,               TRNS,          TRNS,TRNS,TRNS,     HOME,PGDN,END  \
     ),
 };
 
 const uint16_t fn_actions[] = {
+    [0] = ACTION_LAYER_MOMENTARY(1),
 };
