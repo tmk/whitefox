@@ -62,32 +62,30 @@ const uint8_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 /* Give numbers some descriptive names */
-#define ACTION_LEDS_LOGO 1
-#define ACTION_LEDS_ENTER 2
+#define ACTION_LEDS_ALL 1
+#define ACTION_LEDS_GAME 2
 
 const uint16_t fn_actions[] = {
     [0] = ACTION_LAYER_MOMENTARY(1),
     // The following two will call action_function with parameter
-    [1] = ACTION_FUNCTION(ACTION_LEDS_LOGO),
-    [2] = ACTION_FUNCTION(ACTION_LEDS_ENTER),
+    [1] = ACTION_FUNCTION(ACTION_LEDS_ALL),
+    [2] = ACTION_FUNCTION(ACTION_LEDS_GAME),
 };
 
 /* custom action function */
 void action_function(keyrecord_t *record, uint8_t id, uint8_t opt) {
   (void)opt;
   switch(id) {
-    case ACTION_LEDS_ENTER:
-      // toggle enter LED on press
-      if(record->event.pressed) {
-        // signal the LED controller thread
-        chMBPost(&led_mailbox, LED_MSG_ENTER_TOGGLE, TIME_IMMEDIATE);
-      }
+    case ACTION_LEDS_ALL:
+        if(record->event.pressed) {
+          // signal the LED controller thread
+          chMBPost(&led_mailbox, LED_MSG_GAME_TOGGLE, TIME_IMMEDIATE);
+        }
       break;
-    case ACTION_LEDS_LOGO:
-      // toggle TMK LOGO LEDs on press
+    case ACTION_LEDS_GAME:
       if(record->event.pressed) {
         // signal the LED controller thread
-        chMBPost(&led_mailbox, LED_MSG_LOGO_TOGGLE, TIME_IMMEDIATE);
+        chMBPost(&led_mailbox, LED_MSG_ALL_TOGGLE, TIME_IMMEDIATE);
       }
       break;
   }
