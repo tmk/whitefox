@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /*   at most 32 characters or the ugly hack in usb_main.c borks */
 #define MANUFACTURER "TMK"
 #define USBSTR_MANUFACTURER    'T', '\x00', 'M', '\x00', 'K', '\x00', ' ', '\x00'
-#define PRODUCT "Infinity keyboard/TMK"
+#define PRODUCT "WhiteFox/TMK"
 #define USBSTR_PRODUCT         'W', '\x00', 'h', '\x00', 'i', '\x00', 't', '\x00', 'e', '\x00', 'F', '\x00', 'o', '\x00', 'x', '\x00', ' ', '\x00'
 
 /* key matrix size */
@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MATRIX_COLS 8
 
 /* Set 0 if debouncing isn't needed */
-#define DEBOUNCE    5
+#define DEBOUNCE    6
 
 /* Mechanical locking support. Use KC_LCAP, KC_LNUM or KC_LSCR instead in keymap */
 //#define LOCKING_SUPPORT_ENABLE
