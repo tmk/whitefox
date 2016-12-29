@@ -65,7 +65,7 @@ const uint8_t keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #define ACTION_LEDS_ALL 1
 #define ACTION_LEDS_GAME 2
 
-const uint16_t fn_actions[] = {
+const action_t fn_actions[] = {
     [0] = ACTION_LAYER_MOMENTARY(1),
     // The following two will call action_function with parameter
     [1] = ACTION_FUNCTION(ACTION_LEDS_ALL),
